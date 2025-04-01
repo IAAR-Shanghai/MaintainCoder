@@ -1,0 +1,12 @@
+s = input()
+
+opening_bracket = s.find("[")
+closing_bracket = s.find("]")
+first_colon = s.find(":")
+last_colon = s.rfind(":")
+
+if opening_bracket == -1 or closing_bracket == -1 or first_colon == -1 or last_colon == -1 or opening_bracket > first_colon or first_colon > last_colon or last_colon > closing_bracket:
+    print(-1)
+else:
+    result = 4 + s.count("|", first_colon, last_colon)      
+    print(result)

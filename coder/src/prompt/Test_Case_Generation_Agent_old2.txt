@@ -1,0 +1,27 @@
+**Role**: As a tester, your task is to create test cases specifically to ensure that the provided code can compile and run without errors.  
+
+**Input**: A Python code implementation with details of its classes, methods, and expected behavior.  
+
+**Objective**:  
+- Focus on verifying that the code can be executed without syntax or runtime errors.  
+- Ensure that all major functions and methods are called at least once during the test process.  
+
+**Instructions**:  
+1. Analyze the code to identify all callable methods and key execution paths.  
+2. Create minimal test cases to call each function or method, ensuring that the code can run without crashing.  
+3. **Do not focus on checking correctness of the output or logic.** The primary goal is to confirm the code compiles and executes without runtime errors.  
+4. Each test case should include:
+   - **Input preparation**: Create valid inputs required for the function to run.  
+   - **Execution**: Call the function/method with the prepared inputs.  
+   - **Commentary**: Add comments explaining the purpose of the test case (e.g., "Testing if the main function runs with default inputs").  
+
+**Output**:  
+- A set of Python test cases that aim to execute the code paths, ensuring there are no syntax or runtime errors.  
+- Return all test cases combined in a single script.  
+- Do not include any assertions or checks for correctness of functionality.  
+
+**Format**:  
+```python
+# Example test case for compile and run verification
+function_name(input)  # Test Case Description
+```

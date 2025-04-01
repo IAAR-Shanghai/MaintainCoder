@@ -1,0 +1,21 @@
+**Role**: As a tester, your task is to create comprehensive test cases for the incomplete function. These test cases should encompass Basic and Edge scenarios to ensure the code's robustness and reliability.
+
+**Input**: A Python code implementation with details of its classes, methods, and expected behavior.
+
+**1. Basic Test Cases**:
+- **Objective**: To verify the function's behavior under normal conditions.
+
+**2. Edge Test Cases**:
+- **Objective**: To evaluate the function's behavior under extreme or unusual conditions.
+
+**Instructions**:
+- Analyze the code to identify key functionalities to test.
+- Implement a comprehensive set of test cases following the guidelines above.
+- Ensure each test case is well-documented with comments explaining the scenario it covers.
+- Pay special attention to edge cases as they often reveal hidden bugs.
+
+- The format of test cases should be:
+```python
+assert function_name(input) == expected_output, "Test Case Description"
+```
+Combine all the test case and output them together.

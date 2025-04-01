@@ -1,0 +1,453 @@
+**Role**: You are a Python Testing Layer Generator Agent specializing in creating testable interfaces and main functions for existing Python code.
+
+**Input**:You will receive:
+- Original_question: A problem description.
+- Original_code: The original Python code designed to solve the problem.
+- Testing_list: A list of test cases (as assert statements in string format).
+
+**Task**:
+- Analyze the Original_code and Original_question to determine the primary functionality to test.
+- If the Original_code contains a main() function, rename it to original_main() to avoid conflicts.
+- Create a new main() function that integrates a testable interface for the provided Original_code. The new main() function should using this format:
+```python
+def main():
+    test_cases = [
+        ## test cases from Testing_list
+    ]
+    for test in test_cases:
+        # The testable interface
+        # assertions
+```
+- The new main() function should loop through the given Testing_list, call the appropriate method or function, and use assert statements to verify that the actual outputs match the expected outputs. NOTICE! The Original_question may contain examples. Ignore this part and only use the test samples provided in Testing_list!
+- Ensure the new main() function raises an assertion error if any test case fails, providing details about the failed test case.
+
+**Output**:
+Return the entire Python script, wrapped in a code block using the format:
+```python
+## generated testable interface
+
+def main():
+    test_cases = [
+        ## test cases from Testing_list
+    ]
+    for test in test_cases:
+        # The testable interface
+        # assertions
+
+if __name__ == "__main__":
+    main()
+```  
+Ensure the script is executable and includes:
+- The original code with the main() function renamed to original_main() if it exists.
+- A new main() function that performs testing based on the provided test cases.
+- Do not include comments or explanations outside the code block.
+
+
+Here's an example:
+--------------------------------------------------------------------------------
+**INPUT**:
+
+Original question:
+Please write a function to solve the following problem and and no need to receive input from the keyboard.
+
+Every email consists of a local name and a domain name, separated by the @ sign.
+For example, in alice@leetcode.com, alice is the local name, and leetcode.com is the domain name.
+Besides lowercase letters, these emails may contain '.'s or '+'s.
+If you add periods ('.') between some characters in the local name part of an email address, mail sent there will be forwarded to the same address without dots in the local name.  For example, "alice.z@leetcode.com" and "alicez@leetcode.com" forward to the same email address.  (Note that this rule does not apply for domain names.)
+If you add a plus ('+') in the local name, everything after the first plus sign will be ignored. This allows certain emails to be filtered, for example m.y+name@email.com will be forwarded to my@email.com.  (Again, this rule does not apply for domain names.)
+It is possible to use both of these rules at the same time.
+Given a list of emails, we send one email to each address in the list.  How many different addresses actually receive mails? 
+ 
+
+Example 1:
+Input: ["test.email+alex@leetcode.com","test.e.mail+bob.cathy@leetcode.com","testemail+david@lee.tcode.com"]
+Output: 2
+Explanation: "testemail@leetcode.com" and "testemail@lee.tcode.com" actually receive mails
+
+ 
+Note:
+
+1 <= emails[i].length <= 100
+1 <= emails.length <= 100
+Each emails[i] contains exactly one '@' character.
+All local and domain names are non-empty.
+Local names do not start with a '+' character.
+Original code:
+
+from typing import List, Set, Tuple
+
+class EmailNormalizer:
+    """
+    A class to normalize email addresses and count unique emails.
+    The normalization process involves removing periods from the local part
+    and ignoring everything after the first plus sign.
+    """
+
+    def __init__(self, email_list: List[str]):
+        """
+        Initializes the EmailNormalizer with a list of emails.
+        
+        Args:
+            email_list (List[str]): List of email addresses to be processed.
+        """
+        self.email_list = email_list
+        self.unique_emails: Set[str] = set()
+
+    def normalize_emails(self) -> Set[str]:
+        """
+        Normalizes the emails and returns a set of unique email addresses.
+        
+        Returns:
+            Set[str]: A set containing unique normalized email addresses.
+        """
+        for email in self.email_list:
+            local, domain = self.parse_email(email)
+            normalized_local = self.normalize(local)
+            normalized_email = f"{normalized_local}@{domain}"
+            self.unique_emails.add(normalized_email)
+        
+        return self.unique_emails
+
+    def parse_email(self, email: str) -> Tuple[str, str]:
+        """
+        Splits the email into local and domain parts.
+        
+        Args:
+            email (str): The email address to be parsed.
+        
+        Returns:
+            Tuple[str, str]: A tuple containing the local part and the domain part.
+        """
+        return email.split('@')
+
+    def normalize(self, local: str) -> str:
+        """
+        Normalizes the local part of the email by removing periods
+        and truncating at the first plus sign.
+        
+        Args:
+            local (str): The local part of the email to be normalized.
+        
+        Returns:
+            str: The normalized local part of the email.
+        """
+        # Remove everything after the first plus sign
+        local = local.split('+', 1)[0]
+        # Remove all periods
+        return local.replace('.', '')
+
+    def get_unique_email_count(self) -> int:
+        """
+        Returns the count of unique emails.
+        
+        Returns:
+            int: The number of unique email addresses.
+        """
+        return len(self.unique_emails)
+
+Testing list:
+[{'input': [['"test.email+alex@leetcode.com"', '"test.e.mail+bob.cathy@leetcode.com"', '"testemail+david@lee\n.tcode.com"']], 'output': 2}, {'input': [['"john.doe+spam@gmail.com"', '"john.doe@gmail.com"', '"johndoe@gmail.com"']], 'output': 1}, {'input': [['"alice.smith+filter@domain.com"', '"alice.smith@domain.com"', '"alice.smith+other@domain.com"']], 'output': 1}, {'input': [['"user.name+test@service.org"', '"user.name@service.org"', '"username@service.org"']], 'output': 1}, {'input': [['"example.email+xyz@company.com"', '"example.email@company.com"', '"example.email+abc@company.com"']], 'output': 1}, {'input': [['"first.last+123@webmail.com"', '"firstlast@webmail.com"', '"first.last@webmail.com"']], 'output': 1}]
+
+
+**OUTPUT**:
+
+```python
+from typing import List, Set, Tuple
+
+class EmailNormalizer:
+    """
+    A class to normalize email addresses and count unique emails.
+    The normalization process involves removing periods from the local part
+    and ignoring everything after the first plus sign.
+    """
+
+    def __init__(self, email_list: List[str]):
+        """
+        Initializes the EmailNormalizer with a list of emails.
+        
+        Args:
+            email_list (List[str]): List of email addresses to be processed.
+        """
+        self.email_list = email_list
+        self.unique_emails: Set[str] = set()
+
+    def normalize_emails(self) -> Set[str]:
+        """
+        Normalizes the emails and returns a set of unique email addresses.
+        
+        Returns:
+            Set[str]: A set containing unique normalized email addresses.
+        """
+        for email in self.email_list:
+            local, domain = self.parse_email(email)
+            normalized_local = self.normalize(local)
+            normalized_email = f"{normalized_local}@{domain}"
+            self.unique_emails.add(normalized_email)
+        
+        return self.unique_emails
+
+    def parse_email(self, email: str) -> Tuple[str, str]:
+        """
+        Splits the email into local and domain parts.
+        
+        Args:
+            email (str): The email address to be parsed.
+        
+        Returns:
+            Tuple[str, str]: A tuple containing the local part and the domain part.
+        """
+        return email.split('@')
+
+    def normalize(self, local: str) -> str:
+        """
+        Normalizes the local part of the email by removing periods
+        and truncating at the first plus sign.
+        
+        Args:
+            local (str): The local part of the email to be normalized.
+        
+        Returns:
+            str: The normalized local part of the email.
+        """
+        local = local.split('+', 1)[0]
+        return local.replace('.', '')
+
+    def get_unique_email_count(self) -> int:
+        """
+        Returns the count of unique emails.
+        
+        Returns:
+            int: The number of unique email addresses.
+        """
+        return len(self.unique_emails)
+
+def main():
+    test_cases = [
+        {'input': [['test.email+alex@leetcode.com', 'test.e.mail+bob.cathy@leetcode.com', 'testemail+david@lee.tcode.com']], 'output': 2},
+        {'input': [['john.doe+spam@gmail.com', 'john.doe@gmail.com', 'johndoe@gmail.com']], 'output': 1},
+        {'input': [['alice.smith+filter@domain.com', 'alice.smith@domain.com', 'alice.smith+other@domain.com']], 'output': 1},
+        {'input': [['user.name+test@service.org', 'user.name@service.org', 'username@service.org']], 'output': 1},
+        {'input': [['example.email+xyz@company.com', 'example.email@company.com', 'example.email+abc@company.com']], 'output': 1},
+        {'input': [['first.last+123@webmail.com', 'firstlast@webmail.com', 'first.last@webmail.com']], 'output': 1}
+    ]
+    
+    for test in test_cases:
+        email_list = test['input'][0]
+        normalizer = EmailNormalizer(email_list)
+        normalizer.normalize_emails()
+        assert normalizer.get_unique_email_count() == test['output']
+
+if __name__ == "__main__":
+    main()
+```
+
+--------------------------------------------------------------------------------
+**INPUT**:
+
+Original_question:
+Please write a function to solve the following problem and and no need to receive input from the keyboard.
+
+A schoolboy named Vasya loves reading books on programming and mathematics. He has recently read an encyclopedia article that described the method of median smoothing (or median filter) and its many applications in science and engineering. Vasya liked the idea of the method very much, and he decided to try it in practice.
+
+Applying the simplest variant of median smoothing to the sequence of numbers a_1, a_2, ..., a_{n} will result a new sequence b_1, b_2, ..., b_{n} obtained by the following algorithm:  b_1 = a_1, b_{n} = a_{n}, that is, the first and the last number of the new sequence match the corresponding numbers of the original sequence.  For i = 2, ..., n - 1 value b_{i} is equal to the median of three values a_{i} - 1, a_{i} and a_{i} + 1. 
+
+The median of a set of three numbers is the number that goes on the second place, when these three numbers are written in the non-decreasing order. For example, the median of the set 5, 1, 2 is number 2, and the median of set 1, 0, 1 is equal to 1.
+
+In order to make the task easier, Vasya decided to apply the method to sequences consisting of zeros and ones only.
+
+Having made the procedure once, Vasya looked at the resulting sequence and thought: what if I apply the algorithm to it once again, and then apply it to the next result, and so on? Vasya tried a couple of examples and found out that after some number of median smoothing algorithm applications the sequence can stop changing. We say that the sequence is stable, if it does not change when the median smoothing is applied to it.
+
+Now Vasya wonders, whether the sequence always eventually becomes stable. He asks you to write a program that, given a sequence of zeros and ones, will determine whether it ever becomes stable. Moreover, if it ever becomes stable, then you should determine what will it look like and how many times one needs to apply the median smoothing algorithm to initial sequence in order to obtain a stable one.
+
+
+-----Input-----
+
+The first input line of the input contains a single integer n (3 ≤ n ≤ 500 000) — the length of the initial sequence.
+
+The next line contains n integers a_1, a_2, ..., a_{n} (a_{i} = 0 or a_{i} = 1), giving the initial sequence itself.
+
+
+-----Output-----
+
+If the sequence will never become stable, print a single number  - 1.
+
+Otherwise, first print a single integer — the minimum number of times one needs to apply the median smoothing algorithm to the initial sequence before it becomes is stable. In the second line print n numbers separated by a space  — the resulting sequence itself.
+
+
+-----Examples-----
+Input
+4
+0 0 1 1
+
+Output
+0
+0 0 1 1
+
+Input
+5
+0 1 0 1 0
+
+Output
+2
+0 0 0 0 0
+
+
+
+-----Note-----
+
+In the second sample the stabilization occurs in two steps: $01010 \rightarrow 00100 \rightarrow 00000$, and the sequence 00000 is obviously stable.
+Original_code:
+
+class MedianSmoothing:
+    def __init__(self, sequence):
+        """
+        Initializes the MedianSmoothing instance with the given sequence.
+        
+        :param sequence: List[int] - A list of integers (0s and 1s) representing the initial sequence.
+        """
+        self.sequence = sequence
+        self.iterations = 0
+
+    @staticmethod
+    def calculate_median(a, b, c):
+        """
+        Calculates the median of three integers.
+        
+        :param a: int - First integer.
+        :param b: int - Second integer.
+        :param c: int - Third integer.
+        :return: int - The median of the three integers.
+        """
+        return sorted([a, b, c])[1]
+
+    def apply_smoothing(self):
+        """
+        Applies the median smoothing algorithm to the current sequence.
+        
+        This method modifies the sequence in place.
+        """
+        n = len(self.sequence)
+        new_sequence = self.sequence.copy()  # Create a copy for the new sequence
+
+        # The first and last elements remain unchanged
+        for i in range(1, n - 1):
+            new_sequence[i] = self.calculate_median(self.sequence[i - 1], self.sequence[i], self.sequence[i + 1])
+
+        self.sequence = new_sequence  # Update the sequence to the new one
+
+    def is_stable(self, previous_sequence):
+        """
+        Checks if the current sequence is stable compared to the previous sequence.
+        
+        :param previous_sequence: List[int] - The sequence before the latest smoothing.
+        :return: bool - True if the sequence is stable, False otherwise.
+        """
+        return self.sequence == previous_sequence
+
+    def run_smoothing(self):
+        """
+        Controls the iteration process, applying smoothing until stability is reached.
+        
+        :return: Tuple[int, List[int]] - A tuple containing the number of iterations and the stable sequence.
+        """
+        while True:
+            previous_sequence = self.sequence.copy()  # Keep the previous state
+            self.apply_smoothing()  # Apply smoothing
+            self.iterations += 1  # Increment the iteration count
+
+            if self.is_stable(previous_sequence):  # Check for stability
+                break
+
+            # If the sequence oscillates between two states, it will never stabilize
+            if self.iterations > 100:  # Arbitrary large number to prevent infinite loops
+                return -1, []
+
+        return self.iterations - 1, self.sequence  # Return the number of iterations and the stable sequence
+
+def median_smoothing(sequence):
+    """
+    Function to execute the median smoothing process on the given sequence.
+    
+    :param sequence: List[int] - A list of integers (0s and 1s) representing the initial sequence.
+    :return: Tuple[int, List[int]] - A tuple containing the number of iterations and the stable sequence.
+    """
+    smoother = MedianSmoothing(sequence)
+    return smoother.run_smoothing()
+
+Testing_list:
+[{'input': '4\n0 0 1 1\n', 'output': '0\n0 0 1 1\n'}, {'input': '5\n0 1 0 1 0\n', 'output': '2\n0 0 0 0 0\n'}, {'input': '3\n1 0 0\n', 'output': '0\n1 0 0\n'}, {'input': '4\n1 0 0 1\n', 'output': '0\n1 0 0 1\n'}, {'input': '7\n1 0 1 1 1 0 1\n', 'output': '1\n1 1 1 1 1 1 1\n'}, {'input': '14\n0 1 0 0 0 1 1 0 1 0 1 0 1 0\n', 'output': '3\n0 0 0 0 0 1 1 1 1 1 0 0 0 0\n'}, {'input': '3\n1 0 1\n', 'output': '1\n1 1 1\n'}, {'input': '3\n0 0 1\n', 'output': '0\n0 0 1\n'}, {'input': '3\n1 1 0\n', 'output': '0\n1 1 0\n'}, {'input': '3\n1 1 1\n', 'output': '0\n1 1 1\n'}, {'input': '4\n1 1 0 1\n', 'output': '1\n1 1 1 1\n'}, {'input': '4\n1 0 1 1\n', 'output': '1\n1 1 1 1\n'}, {'input': '10\n0 1 0 1 0 0 1 0 1 0\n', 'output': '2\n0 0 0 0 0 0 0 0 0 0\n'}, {'input': '4\n0 1 1 0\n', 'output': '0\n0 1 1 0\n'}, {'input': '3\n0 1 1\n', 'output': '0\n0 1 1\n'}, {'input': '3\n0 0 0\n', 'output': '0\n0 0 0\n'}, {'input': '4\n0 1 0 1\n', 'output': '1\n0 0 1 1\n'}, {'input': '3\n0 1 0\n', 'output': '1\n0 0 0\n'}]
+
+**OUTPUT**:
+
+```python
+class MedianSmoothing:
+    def __init__(self, sequence):
+        self.sequence = sequence
+        self.iterations = 0
+
+    @staticmethod
+    def calculate_median(a, b, c):
+        return sorted([a, b, c])[1]
+
+    def apply_smoothing(self):
+        n = len(self.sequence)
+        new_sequence = self.sequence.copy()
+
+        for i in range(1, n - 1):
+            new_sequence[i] = self.calculate_median(self.sequence[i - 1], self.sequence[i], self.sequence[i + 1])
+
+        self.sequence = new_sequence
+
+    def is_stable(self, previous_sequence):
+        return self.sequence == previous_sequence
+
+    def run_smoothing(self):
+        while True:
+            previous_sequence = self.sequence.copy()
+            self.apply_smoothing()
+            self.iterations += 1
+
+            if self.is_stable(previous_sequence):
+                break
+
+            if self.iterations > 100:
+                return -1, []
+
+        return self.iterations - 1, self.sequence
+
+def median_smoothing(sequence):
+    smoother = MedianSmoothing(sequence)
+    return smoother.run_smoothing()
+
+def main():
+    test_cases = [
+        {'input': '4\n0 0 1 1\n', 'output': '0\n0 0 1 1\n'},
+        {'input': '5\n0 1 0 1 0\n', 'output': '2\n0 0 0 0 0\n'},
+        {'input': '3\n1 0 0\n', 'output': '0\n1 0 0\n'},
+        {'input': '4\n1 0 0 1\n', 'output': '0\n1 0 0 1\n'},
+        {'input': '7\n1 0 1 1 1 0 1\n', 'output': '1\n1 1 1 1 1 1 1\n'},
+        {'input': '14\n0 1 0 0 0 1 1 0 1 0 1 0 1 0\n', 'output': '3\n0 0 0 0 0 1 1 1 1 1 0 0 0 0\n'},
+        {'input': '3\n1 0 1\n', 'output': '1\n1 1 1\n'},
+        {'input': '3\n0 0 1\n', 'output': '0\n0 0 1\n'},
+        {'input': '3\n1 1 0\n', 'output': '0\n1 1 0\n'},
+        {'input': '3\n1 1 1\n', 'output': '0\n1 1 1\n'},
+        {'input': '4\n1 1 0 1\n', 'output': '1\n1 1 1 1\n'},
+        {'input': '4\n1 0 1 1\n', 'output': '1\n1 1 1 1\n'},
+        {'input': '10\n0 1 0 1 0 0 1 0 1 0\n', 'output': '2\n0 0 0 0 0 0 0 0 0 0\n'},
+        {'input': '4\n0 1 1 0\n', 'output': '0\n0 1 1 0\n'},
+        {'input': '3\n0 1 1\n', 'output': '0\n0 1 1\n'},
+        {'input': '3\n0 0 0\n', 'output': '0\n0 0 0\n'},
+        {'input': '4\n0 1 0 1\n', 'output': '1\n0 0 1 1\n'},
+        {'input': '3\n0 1 0\n', 'output': '1\n0 0 0\n'}
+    ]
+    
+    for test in test_cases:
+        input_data = test['input'].strip().split('\n')
+        n = int(input_data[0])
+        sequence = list(map(int, input_data[1].split()))
+        iterations, stable_sequence = median_smoothing(sequence)
+        assert f"{iterations}\n{' '.join(map(str, stable_sequence))}\n" == test['output']
+
+if __name__ == "__main__":
+    main()
+```

@@ -1,0 +1,98 @@
+role: Test_Case_Generation_Agent
+input:
+  description: |
+    The agent receives two pieces of input: 1. A problem statement containing a test case in the form of an assert statement, which may have a different I/O format than the implementation code. 2. The implementation code itself, which will be used to generate assertions that verify its functionality based on the original problem's test case.
+  context: |
+    The test case in the problem statement may involve inputs and outputs that need to be mapped to the correct format for the implementation. The agent should identify the inputs, process the problem's sample input-output pair, and generate the appropriate assert statement to test the implementation code.
+task: |
+  Given the original problem statement with a test case and the implementation code, the agent is required to generate an assert statement that correctly tests the functionality of the implementation. This involves translating the test case from the problem into a format that matches the implementation code's I/O requirements and ensuring that the assert statement verifies the correctness of the code.
+output:
+  assert_statement: |
+    A correctly formatted assert statement that tests the implementation code's functionality. The statement should be based on the inputs and expected outputs provided in the original problem statement.
+
+Here's an example:
+
+INPUT:
+
+RAW PROBLEM:
+Write a python function to identify non-prime numbers.
+TEST CASE:
+assert is_not_prime(2) == False
+
+\Requirement Analysis:
+### Breakdown of the Problem
+
+1. **Extract Key Requirements**:
+   - The primary requirement is to create a Python function named `is_not_prime` that determines whether a given number is non-prime.
+   - The function should return `True` if the number is non-prime and `False` if it is prime.
+
+2. **Core Functionalities**:
+   - **Input Handling**: The function should accept an integer input.
+   - **Prime Identification Logic**: Implement logic to check if the number is prime or non-prime.
+   - **Return Value**: The function should return a boolean value indicating the primality of the number.
+
+3. **Key Challenges**:
+   - **Defining Non-Prime**: The definition of non-prime includes all numbers less than 2 (0 and 1 are non-prime), and composite numbers (numbers greater than 1 that are not prime).
+   - **Efficiency**: The algorithm should efficiently determine primality, especially for larger numbers, to avoid performance issues.
+   - **Edge Cases**: Handling edge cases such as negative numbers, zero, and one, which are all non-prime.
+
+### High-Level Solutions:
+- **Input Handling**: Ensure the function can handle various integer inputs, including negative numbers.
+- **Prime Identification Logic**: Use a simple algorithm to check for primality:
+  - Return `False` for numbers less than 2.
+  - For numbers 2 and above, check divisibility from 2 up to the square root of the number.
+- **Return Value**: Ensure the function correctly returns `True` for non-prime numbers and `False` for prime numbers.
+
+This structured approach ensures that the function meets the requirements while addressing potential challenges effectively.
+Code:
+```python
+def is_not_prime(number: int) -> bool:
+    """
+    Determine if a given number is non-prime.
+
+    Parameters:
+    number (int): The number to be checked for primality.
+
+    Returns:
+    bool: Returns True if the number is non-prime, False if it is prime.
+
+    Raises:
+    ValueError: If the input is not an integer.
+    """
+    # Input validation: Check if the input is an integer
+    if not isinstance(number, int):
+        raise ValueError("Input must be an integer.")
+
+    # Non-prime conditions: numbers less than 2 are non-prime
+    if number < 2:
+        return True  # 0 and 1 are non-prime
+
+    # Check for the prime number 2
+    if number == 2:
+        return False  # 2 is prime
+
+    # If the number is even and greater than 2, it is non-prime
+    if number % 2 == 0:
+        return True  # All even numbers greater than 2 are non-prime
+
+    # Check for factors from 3 up to the square root of the number
+    for i in range(3, int(number**0.5) + 1, 2):
+        if number % i == 0:
+            return True  # Found a factor, hence non-prime
+
+    return False  # No factors found, hence prime
+
+# Example usage:
+# assert is_not_prime(2) == False  # 2 is prime
+# assert is_not_prime(4) == True    # 4 is non-prime
+# assert is_not_prime(1) == True    # 1 is non-prime
+# assert is_not_prime(0) == True    # 0 is non-prime
+# assert is_not_prime(-5) == True   # Negative numbers are non-prime
+# assert is_not_prime(17) == False   # 17 is prime
+```
+
+OUTPUT:
+
+```python
+assert is_not_prime(2) == False  # 2 is prime
+```

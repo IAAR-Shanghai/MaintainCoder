@@ -1,0 +1,92 @@
+class Matrix:
+    """
+    Represents the cost matrix and provides utilities to interact with it.
+    """
+    def __init__(self, cost_matrix):
+        """
+        Initializes the matrix with the provided cost matrix.
+        
+        :param cost_matrix: List of lists representing the cost matrix
+        """
+        self.cost_matrix = cost_matrix
+
+    def getValueAt(self, row, col):
+        """
+        Returns the cost value at a specified position.
+        
+        :param row: Row index
+        :param col: Column index
+        :return: Value at the given row and column
+        """
+        if self.isWithinBounds(row, col):
+            return self.cost_matrix[row][col]
+        return float('inf')  # Beyond bounds, return infinity to ignore path
+
+    def isWithinBounds(self, row, col):
+        """
+        Checks if the specified position is within the matrix bounds.
+        
+        :param row: Row index
+        :param col: Column index
+        :return: Boolean indicating if the position is within the matrix bounds
+        """
+        return 0 <= row < len(self.cost_matrix) and 0 <= col < len(self.cost_matrix[0])
+
+
+class PathFinder:
+    """
+    Responsible for finding the minimum cost path using dynamic programming.
+    """
+    def __init__(self, matrix):
+        """
+        Initializes the PathFinder with a given cost matrix.
+        
+        :param matrix: An instance of the Matrix class
+        """
+        self.matrix = matrix
+        self.dpTable = None
+
+    def initializeDP(self, m, n):
+        """
+        Initializes the DP table to cache computation results.
+        
+        :param m: Destination row
+        :param n: Destination column
+        """
+        self.dpTable = [[float('inf')] * (n + 1) for _ in range(m + 1)]
+        # Base case: Start position has its initial cost
+        self.dpTable[0][0] = self.matrix.getValueAt(0, 0)
+
+    def calculateMinCost(self, m, n):
+        """
+        Public method to compute and return the minimum cost to reach the destination.
+        
+        :param m: The row index of the destination cell
+        :param n: The column index of the destination cell
+        :return: Minimum cost to reach cell (m, n)
+        """
+        self.initializeDP(m, n)
+        return self.computeCost(m, n)
+
+    def computeCost(self, m, n):
+        """
+        Implements dynamic programming to populate the dpTable and returns the minimum cost.
+        
+        :param m: The row index of the destination cell
+        :param n: The column index of the destination cell
+        :return: Minimum cost to reach cell (m, n)
+        """
+        for i in range(m + 1):
+            for j in range(n + 1):
+                # Compute minimum cost path to reach cell (i, j) from neighbors
+                if i != 0 or j != 0:  # Skip the starting point since it's already set
+                    min_cost = float('inf')
+                    if i > 0:
+                        min_cost = min(min_cost, self.dpTable[i-1][j])
+                    if j > 0:
+                        min_cost = min(min_cost, self.dpTable[i][j-1])
+                    if i > 0 and j > 0:
+                        min_cost = min(min_cost, self.dpTable[i-1][j-1])
+                    self.dpTable[i][j] = self.matrix.getValueAt(i, j) + min_cost
+
+        return self.dpTable[m][n]

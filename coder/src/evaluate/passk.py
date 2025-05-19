@@ -1,5 +1,4 @@
 import os
-from abc import ABCMeta, abstractmethod
 from autogen import ConversableAgent, gather_usage_summary
 from autogen.coding import DockerCommandLineCodeExecutor
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -35,17 +34,10 @@ if __name__ == "__main__":
 """
     return main_function
 
-class Pass1(metaclass=ABCMeta):
-    def __init__(self, slient=True):
-        self.dataset = self.load_data()
+class Passk():
+    def __init__(self, dataset, slient=True):
+        self.dataset = dataset
         self.slient = slient
-
-    @abstractmethod
-    def load_data(self):
-        """
-        创建一个字典，键为id，值为一个list，包含task,code和test_list。
-        """
-        pass
 
     def get_task(self, id):
         return self.dataset[id][0]

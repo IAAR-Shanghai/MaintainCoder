@@ -12,6 +12,6 @@ config_path = PROJECT_ROOT / "config" / "config.yaml"
 with open(config_path, "r") as f:
     config = yaml.safe_load(f)
 
-API_KEY = config["api_key"]
-BASE_URL = config["base_url"]
-MODEL_NAME = config["model_name"]
+AGENT_API_KEY = config["agent_api_key"]
+AGENT_BASE_URL = config["agent_base_url"]
+AGENT_MODEL_NAME = config["agent_model_name"]

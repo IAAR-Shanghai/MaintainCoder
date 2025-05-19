@@ -1,3 +1,3 @@
-api_key = ""
-api_url = ""
-model_name = ""
+agent_api_key : ""
+agent_api_url : ""
+agent_model_name : ""

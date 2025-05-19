@@ -3,7 +3,6 @@ import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 from tqdm import tqdm
-import yaml
 from openai import OpenAI
 
 from coder.src.utils import extract_python_code
@@ -11,8 +10,10 @@ from coder.src.agents import AgentManager
 from coder.src.custom_conversable_agent import CustomConversableAgent
 
 class Generate_agent():
-    def __init__(self, dataset, save_path, base_model, seed=42):
-        self.base_model = base_model
+    def __init__(self, dataset, save_path, api_key, base_url, model_name, seed=42):
+        self.api_key = api_key
+        self.base_url = base_url
+        self.model_name = model_name
         self.seed = seed
         self.save_path = save_path # 保存的路径
         self.dataset = dataset
@@ -32,7 +33,7 @@ class Generate_agent():
             ["Code_Modification_Agent", id],
             ["Code_Extraction_Agent", id]
         ]
-        agent_manager = AgentManager(agent_names, base_model=self.base_model, seed=self.seed)
+        agent_manager = AgentManager(agent_names, api_key=self.api_key, base_url=self.base_url, model_name=self.model_name, seed=self.seed)
         Requirement_Analysis_Agent = agent_manager.agents["Requirement_Analysis_Agent"]
         Design_Pattern_Selection_Agent = agent_manager.agents["Design_Pattern_Selection_Agent"]
         Framework_Design_Agent = agent_manager.agents["Framework_Design_Agent"]
@@ -115,7 +116,7 @@ class Generate_agent():
     
     def process_problem(self, id):
         query = self.dataset[id]
-        print(f"-------------------STARTING-NUMBER{id}-------------------")
+        # print(f"-------------------STARTING-NUMBER{id}-------------------")
         return self.generate_answer(str(id), query)
     
     def run(self):
@@ -132,7 +133,7 @@ class Generate_agent():
                     with open(self.save_path, 'a', encoding='utf-8') as file:
                         json_record = json.dumps({"id": id, "code": code})
                         file.write(json_record + "\n")
-                    print(f"Completed processing for problem {id}")
+                    # print(f"Completed processing for problem {id}")
                 except Exception as e:
                     print(f"Error processing problem {id}: {e}")
                     error_list.append(id)
@@ -140,28 +141,26 @@ class Generate_agent():
         return error_list
 
 
-class Generate_gpt():
-    def __init__(self, dataset, save_path, prompt_path, base_model, prompt_type = "direct"):
+class Generate_llm():
+    def __init__(self, dataset, save_path, prompt_path, api_key, base_url, model_name, prompt_type = "direct"):
         self.save_path = save_path
-        self.base_model = base_model
+        self.api_key = api_key
+        self.base_url = base_url
+        self.model_name = model_name
         self.prompt_type = prompt_type
         self.prompt_path = prompt_path
         self.dataset = dataset
         with open(self.prompt_path, "r") as file:
             self.prompt = file.read()
-        with open("config.yaml", "r") as file:
-            self.config = yaml.safe_load(file)
-        self.api_key = self.config["OPENAI_API_KEY"]
-        self.api_base = self.config["OPENAI_API_BASE"]
         self.client = OpenAI(
             api_key=self.api_key,
-            base_url=self.api_base
+            base_url=self.base_url
         )
 
     def generate_answer(self, query, prompt_type):
         if prompt_type == "direct":
             completion = self.client.chat.completions.create(
-                model=self.base_model,
+                model=self.model_name,
                 temperature=0.3,
                 top_p=0.95,
                 messages=[
@@ -174,7 +173,7 @@ class Generate_gpt():
             )
         elif prompt_type == "selfplanning":
             completion = self.client.chat.completions.create(
-                model=self.base_model,
+                model=self.model_name,
                 temperature=0.3,
                 top_p=0.95,
                 messages=[
@@ -186,7 +185,7 @@ class Generate_gpt():
             )
             plan = completion.choices[0].message.content
             completion = self.client.chat.completions.create(
-                model=self.base_model,
+                model=self.model_name,
                 temperature=0.3,
                 top_p=0.95,
                 messages=[
@@ -199,7 +198,7 @@ class Generate_gpt():
             )
         elif prompt_type == "COT":
             completion = self.client.chat.completions.create(
-                model=self.base_model,
+                model=self.model_name,
                 temperature=0.3,
                 top_p=0.95,
                 messages=[
@@ -218,7 +217,6 @@ class Generate_gpt():
     
     def process_problem(self, id):
         query = self.dataset[id]
-        print(f"-------------------STARTING-NUMBER{id}-------------------")
         return self.generate_answer(query, self.prompt_type)
     
     def run(self):
@@ -233,130 +231,15 @@ class Generate_gpt():
                     with open(self.save_path, 'a', encoding='utf-8') as file:
                         json_record = json.dumps({"id": id, "code": code})
                         file.write(json_record + "\n")
-                    print(f"Completed processing for problem {id}")
                 except Exception as e:
                     print(f"Error processing problem {id}: {e}")
                     error_list.append(id)
         print("All problems processed")
         return error_list
-    
-
-class Generate_qwen():
-    def __init__(self, dataset, save_path, prompt_path, base_model):
-        self.save_path = save_path
-        self.base_model = base_model
-        self.dataset = dataset
-        with open(prompt_path, "r") as file:
-            self.prompt = file.read()
-        with open("config.yaml", "r") as file:
-            self.config = yaml.safe_load(file)
-        self.api_key = self.config["QWEN_API_KEY"]
-        self.api_base = self.config["QWEN_API_BASE"]
-        self.client = OpenAI(
-            api_key=self.api_key,
-            base_url=self.api_base
-        )
-
-    def generate_answer(self, query):
-        completion = self.client.chat.completions.create(
-            model=self.base_model,
-            temperature=0.3,
-            top_p=0.95,
-            messages=[
-                {"role": "system", "content": self.prompt},
-                {
-                    "role": "user",
-                    "content": query
-                }
-            ]
-        )
-        final_code = extract_python_code([completion.choices[0].message.content])
-        return final_code
-    
-    def process_problem(self, id):
-        query = self.dataset[id]
-        print(f"-------------------STARTING-NUMBER{id}-------------------")
-        return self.generate_answer(query)
-    
-    def run(self):
-        id_list = list(self.dataset.keys())
-        error_list = []
-        with ThreadPoolExecutor(max_workers=5) as th_executor:
-            futures = {th_executor.submit(self.process_problem, id): id for id in id_list}
-            for future in tqdm(as_completed(futures), total=len(futures), desc="Processing problems"):
-                id = futures[future]
-                try:
-                    code = future.result()
-                    with open(self.save_path, 'a', encoding='utf-8') as file:
-                        json_record = json.dumps({"id": id, "code": code})
-                        file.write(json_record + "\n")
-                    print(f"Completed processing for problem {id}")
-                except Exception as e:
-                    print(f"Error processing problem {id}: {e}")
-                    error_list.append(id)
-        print("All problems processed")
-        return error_list
-    
-class Generate_ds():
-    def __init__(self, dataset, save_path, prompt_path, base_model):
-        self.save_path = save_path
-        self.base_model = base_model
-        self.dataset = dataset
-        with open(prompt_path, "r") as file:
-            self.prompt = file.read()
-        with open("config.yaml", "r") as file:
-            self.config = yaml.safe_load(file)
-        self.api_key = self.config["DS_API_KEY"]
-        self.api_base = self.config["DS_API_BASE"]
-        self.client = OpenAI(
-            api_key=self.api_key,
-            base_url=self.api_base
-        )
-
-    def generate_answer(self, query):
-        completion = self.client.chat.completions.create(
-            model=self.base_model,
-            temperature=0.3,
-            top_p=0.95,
-            messages=[
-                {"role": "system", "content": self.prompt},
-                {
-                    "role": "user",
-                    "content": query
-                }
-            ]
-        )
-        final_code = extract_python_code([completion.choices[0].message.content])
-        return final_code
-    
-    def process_problem(self, id):
-        query = self.dataset[id]
-        # print(f"-------------------STARTING-NUMBER{id}-------------------")
-        return self.generate_answer(query)
-    
-    def run(self):
-        id_list = list(self.dataset.keys())
-        error_list = []
-        with ThreadPoolExecutor(max_workers=5) as th_executor:
-            futures = {th_executor.submit(self.process_problem, id): id for id in id_list}
-            for future in tqdm(as_completed(futures), total=len(futures), desc="Processing problems"):
-                id = futures[future]
-                try:
-                    code = future.result()
-                    with open(self.save_path, 'a', encoding='utf-8') as file:
-                        json_record = json.dumps({"id": id, "code": code})
-                        file.write(json_record + "\n")
-                    # print(f"Completed processing for problem {id}")
-                except Exception as e:
-                    print(f"Error processing problem {id}: {e}")
-                    error_list.append(id)
-        print("All problems processed")
-        return error_list
-
 
 class Generate_agent_no_optimize():
-    def __init__(self, dataset, save_path, base_model, seed=42):
-        self.base_model = base_model
+    def __init__(self, dataset, save_path, model_name, seed=42):
+        self.model_name = model_name
         self.seed = seed
         self.save_path = save_path # 保存的路径
         self.dataset = dataset
@@ -376,7 +259,7 @@ class Generate_agent_no_optimize():
             ["Code_Modification_Agent", id],
             ["Code_Extraction_Agent", id]
         ]
-        agent_manager = AgentManager(agent_names, base_model=self.base_model, seed=self.seed)
+        agent_manager = AgentManager(agent_names, api_key=self.api_key, base_url=self.base_url, model_name=self.model_name, seed=self.seed)
         Requirement_Analysis_Agent = agent_manager.agents["Requirement_Analysis_Agent"]
         Design_Pattern_Selection_Agent = agent_manager.agents["Design_Pattern_Selection_Agent"]
         Framework_Design_Agent = agent_manager.agents["Framework_Design_Agent"]
@@ -454,15 +337,15 @@ class Generate_agent_no_optimize():
         User.initiate_chat(Code_Extraction_Agent, message = code_final, max_turns=1)
         final_code = extract_python_code([CustomConversableAgent.last_message(Code_Extraction_Agent)['content']])
         # final_code = extract_python_code([code_final])
-        # cost = gather_usage_summary([Requirement_Analysis_Agent, Design_Pattern_Selection_Agent, Framework_Design_Agent, Supervisor_Agent, Code_Implementation_Agent, Test_Case_Generation_Agent, Coordination_Agent, Code_Execution_Agent, User, Library_Installation_Agent, Code_Modification_Agent, Code_Extraction_Agent])['usage_including_cached_inference']['total_cost']
-        cost = 0
+        cost = gather_usage_summary([Requirement_Analysis_Agent, Design_Pattern_Selection_Agent, Framework_Design_Agent, Supervisor_Agent, Code_Implementation_Agent, Test_Case_Generation_Agent, Coordination_Agent, Code_Execution_Agent, User, Library_Installation_Agent, Code_Modification_Agent, Code_Extraction_Agent])['usage_including_cached_inference']['total_cost']
+        # cost = 0
         shutil.rmtree(Code_Execution_Agent._code_execution_config["executor"].work_dir)
         Code_Execution_Agent._code_execution_config["executor"].stop()
         return final_code, cost
     
     def process_problem(self, id):
         query = self.dataset[id]
-        print(f"-------------------STARTING-NUMBER{id}-------------------")
+        # print(f"-------------------STARTING-NUMBER{id}-------------------")
         return self.generate_answer(str(id), query)
     
     def run(self):
@@ -479,7 +362,7 @@ class Generate_agent_no_optimize():
                     with open(self.save_path, 'a', encoding='utf-8') as file:
                         json_record = json.dumps({"id": id, "code": code})
                         file.write(json_record + "\n")
-                    print(f"Completed processing for problem {id}")
+                    # print(f"Completed processing for problem {id}")
                 except Exception as e:
                     print(f"Error processing problem {id}: {e}")
                     error_list.append(id)
@@ -488,8 +371,8 @@ class Generate_agent_no_optimize():
     
 
 class Generate_agent_no_iteration():
-    def __init__(self, dataset, save_path, base_model, seed=42):
-        self.base_model = base_model
+    def __init__(self, dataset, save_path, model_name, seed=42):
+        self.model_name = model_name
         self.seed = seed
         self.save_path = save_path # 保存的路径
         self.dataset = dataset
@@ -509,7 +392,7 @@ class Generate_agent_no_iteration():
             ["Code_Modification_Agent", id],
             ["Code_Extraction_Agent", id]
         ]
-        agent_manager = AgentManager(agent_names, base_model=self.base_model, seed=self.seed)
+        agent_manager = AgentManager(agent_names, api_key=self.api_key, base_url=self.base_url, model_name=self.model_name, seed=self.seed)
         Requirement_Analysis_Agent = agent_manager.agents["Requirement_Analysis_Agent"]
         Design_Pattern_Selection_Agent = agent_manager.agents["Design_Pattern_Selection_Agent"]
         Framework_Design_Agent = agent_manager.agents["Framework_Design_Agent"]
@@ -586,15 +469,15 @@ class Generate_agent_no_iteration():
         # User.initiate_chat(Code_Extraction_Agent, message = code_final, max_turns=1)
         # final_code = extract_python_code([CustomConversableAgent.last_message(Code_Extraction_Agent)['content']])
         # # final_code = extract_python_code([code_final])
-        # cost = gather_usage_summary([Requirement_Analysis_Agent, Design_Pattern_Selection_Agent, Framework_Design_Agent, Supervisor_Agent, Code_Implementation_Agent, Test_Case_Generation_Agent, Coordination_Agent, Code_Execution_Agent, User, Library_Installation_Agent, Code_Modification_Agent, Code_Extraction_Agent])['usage_including_cached_inference']['total_cost']
-        cost = 0
+        cost = gather_usage_summary([Requirement_Analysis_Agent, Design_Pattern_Selection_Agent, Framework_Design_Agent, Supervisor_Agent, Code_Implementation_Agent, Test_Case_Generation_Agent, Coordination_Agent, Code_Execution_Agent, User, Library_Installation_Agent, Code_Modification_Agent, Code_Extraction_Agent])['usage_including_cached_inference']['total_cost']
+        # cost = 0
         shutil.rmtree(Code_Execution_Agent._code_execution_config["executor"].work_dir)
         # Code_Execution_Agent._code_execution_config["executor"].stop()
         return final_code, cost
     
     def process_problem(self, id):
         query = self.dataset[id]
-        print(f"-------------------STARTING-NUMBER{id}-------------------")
+        # print(f"-------------------STARTING-NUMBER{id}-------------------")
         return self.generate_answer(str(id), query)
     
     def run(self):
@@ -611,7 +494,7 @@ class Generate_agent_no_iteration():
                     with open(self.save_path, 'a', encoding='utf-8') as file:
                         json_record = json.dumps({"id": id, "code": code})
                         file.write(json_record + "\n")
-                    print(f"Completed processing for problem {id}")
+                    # print(f"Completed processing for problem {id}")
                 except Exception as e:
                     print(f"Error processing problem {id}: {e}")
                     error_list.append(id)

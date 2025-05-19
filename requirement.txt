@@ -1,0 +1,8 @@
+pyyaml
+pillow>=9.1
+tifffile>=2022.8.12
+sympy==1.13.1
+fsspec
+autogen-agentchat~=0.2
+fire>=0.5.0
+flaml[automl]>=2.0.0

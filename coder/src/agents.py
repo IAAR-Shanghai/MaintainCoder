@@ -2,16 +2,15 @@ import os
 from autogen.coding import DockerCommandLineCodeExecutor
 
 from coder.src.utils import load_prompt
-from coder.config import API_KEY, BASE_URL, MODEL_NAME, DOCKER_WORKSPACE
+from coder.config import DOCKER_WORKSPACE
 from coder.src.custom_conversable_agent import CustomConversableAgent
 
 
 class AgentManager:
-    def __init__(self, agent_names, base_model, seed=42):
-        self.base_model = base_model
+    def __init__(self, agent_names, api_key, base_url, model_name, seed=42):
         self.seed = seed
         self.agents = {}
-        config_list = [{"model": MODEL_NAME, "api_key": API_KEY, "base_url": BASE_URL}]
+        config_list = [{"model": model_name, "api_key": api_key, "base_url": base_url}]
         self.llm_config = {
             "config_list": config_list,
             'temperature': 0.3,

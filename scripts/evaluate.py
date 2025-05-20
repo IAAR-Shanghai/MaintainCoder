@@ -1,4 +1,5 @@
 import json
+import os
 
 from coder.src.evaluate.MIscore import calculate_MI
 from coder.src.evaluate.passk import Passk
@@ -11,37 +12,41 @@ code_root = PROJECT_ROOT / "coder" / "experiment"
 
 # pass5
 def run_pass5_raw(dataset_name, method_name):
-    id_list = list(load_data_for_pass_raw(code_root / dataset_name / f"{method_name}_1.jsonl",  bench_root / dataset_name).keys())
+    error_path = code_root / dataset_name / "error_detail"
+    os.makedirs(error_path, exist_ok=True)
+    id_list = list(load_data_for_pass_raw(code_root / dataset_name / "code" / f"{method_name}_1.jsonl",  bench_root / f"{dataset_name}.jsonl").keys())
     pass_list = {}
     for id in id_list:
         pass_list[id] = 5
     for i in range(5):
-        dataset_for_eval = load_data_for_pass_raw(code_root / dataset_name / f"{method_name}_{i}.jsonl",  bench_root / dataset_name)
+        dataset_for_eval = load_data_for_pass_raw(code_root / dataset_name / "code" / f"{method_name}_{i}.jsonl",  bench_root / f"{dataset_name}.jsonl")
         evaluator = Passk(dataset_for_eval, slient=True)
-        error_list, failed_list, failed_type_list = evaluator.run()
+        results, failed_list, error_type_list = evaluator.run(max_workers=8)
         for id in failed_list:
             pass_list[id] -= 1
-        with open(code_root / dataset_name / f"{method_name}_{i}_error_raw.jsonl", 'w', encoding='utf-8') as file:
-            for id in sorted(failed_type_list.keys()):
-                record = failed_type_list[f'{id}']
+        with open(error_path / f"{method_name}_{i}_error_raw.jsonl", 'w', encoding='utf-8') as file:
+            for id in sorted(results.keys()):
+                record = results[f'{id}']
                 file.write(json.dumps({'id': f'{id}', 'result': record['result'], 'error_type': record['error_type']})+'\n')
     pass_5 = sum([1 for i in pass_list.values() if i !=0]) / len(pass_list)
     return pass_5, pass_list
 
 def run_pass5_dyn(dataset_name, method_name):
-    id_list = list(load_data_for_pass_dyn(code_root / dataset_name / f"{method_name}_1_dyn.jsonl", bench_root / dataset_name).keys())
+    error_path = code_root / dataset_name / "error_detail"
+    os.makedirs(error_path, exist_ok=True)
+    id_list = list(load_data_for_pass_dyn(code_root / dataset_name / "code" / f"{method_name}_1_dyn.jsonl", bench_root / f"{dataset_name}.jsonl").keys())
     pass_list = {}
     for id in id_list:
         pass_list[id] = 5
     for i in range(5):
-        dataset_for_eval = load_data_for_pass_dyn(code_root / dataset_name / f"{method_name}_{i}_dyn.jsonl",  bench_root / dataset_name)
+        dataset_for_eval = load_data_for_pass_dyn(code_root / dataset_name / "code" / f"{method_name}_{i}_dyn.jsonl",  bench_root / f"{dataset_name}.jsonl")
         evaluator = Passk(dataset_for_eval, slient=True)
-        error_list, failed_list, failed_type_list = evaluator.run()
+        results, failed_list, error_type_list = evaluator.run(max_workers=8)
         for id in failed_list:
             pass_list[id] -= 1
-        with open(code_root / dataset_name / f"{method_name}_{i}_error_dyn.jsonl", 'w', encoding='utf-8') as file:
-            for id in sorted(failed_type_list.keys()):
-                record = failed_type_list[f'{id}']
+        with open(error_path / f"{method_name}_{i}_error_dyn.jsonl", 'w', encoding='utf-8') as file:
+            for id in sorted(results.keys()):
+                record = results[f'{id}']
                 file.write(json.dumps({'id': f'{id}', 'result': record['result'], 'error_type': record['error_type']})+'\n')
     pass_5 = sum([1 for i in pass_list.values() if i !=0]) / len(pass_list)
     return pass_5, pass_list
@@ -53,7 +58,7 @@ def run_cal_MI(dataset_name, method_name):
     HE_score = []
     SLOC_score = []
     for i in range(5):
-        code_path = code_root / dataset_name / f"{method_name}_{i}.jsonl"
+        code_path = code_root / dataset_name / "code" / f"{method_name}_{i}.jsonl"
         with open(code_path, 'r', encoding='utf-8') as file:
             for line in file:
                 record = json.loads(line)
@@ -81,8 +86,8 @@ def run_cal_sim(dataset_name, method_name):
     sloc_v2 = []
     for i in range(5):
         raw_codes = {}
-        raw_code_path = code_root / dataset_name / f"{method_name}_{i}.jsonl"
-        dyn_code_path = code_root / dataset_name / f"{method_name}_{i}_dyn.jsonl"
+        raw_code_path = code_root / dataset_name / "code" /  f"{method_name}_{i}.jsonl"
+        dyn_code_path = code_root / dataset_name / "code" /  f"{method_name}_{i}_dyn.jsonl"
         with open(raw_code_path, 'r', encoding='utf-8') as file:
             for line in file:
                 record = json.loads(line)

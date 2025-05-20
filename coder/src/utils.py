@@ -90,6 +90,19 @@ Test Case:\n{test_case}\n
                 dyn_dataset[task_id] = query
     return dyn_dataset
 
+def clear_code(code):
+    # 清除多行注释（""" 或 ''' 包裹的内容）
+    code = re.sub(r'"""[\s\S]*?"""', '', code)  # 匹配 """..."""
+    code = re.sub(r"'''[\s\S]*?'''", '', code)  # 匹配 '''...'''
+    
+    # 清除单行注释（以 # 开头的内容）
+    code = re.sub(r'#.*', '', code)
+    
+    # 清理多余的空行
+    code = '\n'.join(line for line in code.split('\n') if line.strip())
+    
+    return code
+
 def load_data_for_pass_raw(code_path, bench_path):
     dataset = {}
     code = {}
@@ -103,7 +116,9 @@ def load_data_for_pass_raw(code_path, bench_path):
             if record['task_id'].split('/')[1].split('-')[1]=='2':
                 task_id = record['task_id'].split('/')[1].split('-')[0]
                 task = record['raw_problem']
-                new_code = code[task_id]
+                new_code = clear_code(code.get(task_id))
+                if not new_code:
+                    new_code = "print('no solution')"
                 test_list = record['raw_test_input']
                 dataset[task_id] = [task, new_code, test_list]
     return dataset
@@ -120,7 +135,9 @@ def load_data_for_pass_dyn(code_path, bench_path):
             record = json.loads(line)
             task_id = record['task_id'].split('/')[1]
             task = record['new_problem']
-            new_code = code[task_id]
+            new_code = clear_code(code.get(task_id))
+            if not new_code:
+                new_code = "print('no solution')"
             test_list = record['test_input']
             dataset[task_id] = [task, new_code, test_list]
     return dataset

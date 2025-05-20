@@ -1,4 +1,5 @@
 pyyaml
+radon
 pillow>=9.1
 tifffile>=2022.8.12
 sympy==1.13.1
